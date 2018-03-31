@@ -24,6 +24,10 @@ FUNCTIONALITIES IMPLEMENTED-
 #include <errno.h>
 #include <fcntl.h>
 
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
 /*GLOBAL VARIABLES*/
 int pipe_count=0, fd;
 static char* args[512];
@@ -597,11 +601,12 @@ void prompt()
   char shell[1000];
    if (getcwd(cwd, sizeof(cwd)) != NULL)
         {
-          strcpy(shell, "My_shell:");
+          strcpy(shell, "shell:");
           strcat(shell, cwd);
           strcat(shell, "$ ");
-
-          printf("%s", shell);
+	  printf(ANSI_COLOR_CYAN);
+          printf( "%s" , shell);
+	  printf(ANSI_COLOR_RESET);
         }
    else
        perror("getcwd() error");
@@ -648,7 +653,9 @@ int main()
     }  
     if(flag==1)
       {
+      printf(ANSI_COLOR_MAGENTA);
       printf("Bye...\n");
+      printf(ANSI_COLOR_RESET);
       exit(0);       
       return 0;
       }
