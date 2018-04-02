@@ -23,6 +23,8 @@ FUNCTIONALITIES IMPLEMENTED-
 #include <stdlib.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <readline/history.h>
+#include <readline/readline.h>
 
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
@@ -50,6 +52,7 @@ char his_var[2000];
 char *input_redirection_file;
 char *output_redirection_file;
 extern char** environ;
+char* inp;
 
 /***************************Header Files Used*****************************/
 void clear_variables();
@@ -619,11 +622,25 @@ int main()
     char ch[2]={"\n"};
     getcwd(current_directory, sizeof(current_directory));
     signal(SIGINT, sigintHandler);
+	
     while (1)
     {
       clear_variables();
-      prompt();
-      fgets(input_buffer, 1024, stdin);
+	  char shell[1000];
+   if (getcwd(cwd, sizeof(cwd)) != NULL)
+        {
+          strcpy(shell, "shell:");
+          strcat(shell, cwd);
+          strcat(shell, "$ ");
+	  //printf(ANSI_COLOR_CYAN);
+          //printf( "%s" , shell);
+	  //printf(ANSI_COLOR_RESET);
+        }
+	
+      inp = readline(shell);
+      add_history(inp);
+	strcpy(input_buffer,inp);
+	strcat(input_buffer,".");
       if(strcmp(input_buffer, ch)==0)
             {
               continue;
