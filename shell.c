@@ -25,7 +25,6 @@ FUNCTIONALITIES IMPLEMENTED-
 #include <fcntl.h>
 #include <readline/history.h>
 #include <readline/readline.h>
-
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
@@ -34,7 +33,7 @@ FUNCTIONALITIES IMPLEMENTED-
 int pipe_count=0, fd;
 static char* args[512];
 char *history_file;
-char input_buffer[1024];
+char *input_buffer;
 char *cmd_exec[100];
 int flag, len;
 char cwd[1024];
@@ -52,7 +51,6 @@ char his_var[2000];
 char *input_redirection_file;
 char *output_redirection_file;
 extern char** environ;
-char* inp;
 
 /***************************Header Files Used*****************************/
 void clear_variables();
@@ -610,6 +608,7 @@ void prompt()
 	  printf(ANSI_COLOR_CYAN);
           printf( "%s" , shell);
 	  printf(ANSI_COLOR_RESET);
+	  
         }
    else
        perror("getcwd() error");
@@ -617,30 +616,19 @@ void prompt()
 }
 
 int main()
-{   
+{   input_buffer = (char*)malloc(1024*sizeof(char));
     int status;
     char ch[2]={"\n"};
     getcwd(current_directory, sizeof(current_directory));
     signal(SIGINT, sigintHandler);
-	
     while (1)
     {
       clear_variables();
-	  char shell[1000];
-   if (getcwd(cwd, sizeof(cwd)) != NULL)
-        {
-          strcpy(shell, "shell:");
-          strcat(shell, cwd);
-          strcat(shell, "$ ");
-	  //printf(ANSI_COLOR_CYAN);
-          //printf( "%s" , shell);
-	  //printf(ANSI_COLOR_RESET);
-        }
-	
-      inp = readline(shell);
-      add_history(inp);
-	strcpy(input_buffer,inp);
-	strcat(input_buffer,".");
+      prompt();
+      input_buffer = readline(NULL);
+      //fgets(input_buffer, 1024, stdin);
+      printf("Inp_buf : %s\n",input_buffer);
+      add_history(input_buffer);
       if(strcmp(input_buffer, ch)==0)
             {
               continue;
@@ -651,7 +639,7 @@ int main()
                 filewrite(); 
             }         
       len = strlen(input_buffer);
-      input_buffer[len-1]='\0';
+      //input_buffer[len-1]='\0';
       strcpy(his_var, input_buffer);
       if(strcmp(input_buffer, "exit") == 0) 
             {
