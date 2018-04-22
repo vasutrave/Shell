@@ -1,19 +1,4 @@
-/* 
-Name        :   Kalpish Singhal
-******************************************************************************
-FUNCTIONALITIES IMPLEMENTED-
-1. Execute all the External commands (ls, clear, vi etc.)
-2. Implement Internal commands: cd, pwd
-3. Print Initialize and use environment variables
-4. Print environment variables using echo command
-5. I/O redirection (<, >)  
-6. Support for history command and '!' operator (history, !!, !-1, !10,!-10 etc)
-7. Pipes “|” (multiple) (Ex: ls | grep 'a' | wc)
-8.Handle Interrupt Signal: On pressing "Ctrl+C", the command that is running 
-  currently should be terminated, your program should not terminate. 
 
-********************************************************************************  
-*/
 
 #include <stdio.h>
 #include <unistd.h>
@@ -25,9 +10,12 @@ FUNCTIONALITIES IMPLEMENTED-
 #include <fcntl.h>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include "utlist.h"
+
 #define ANSI_COLOR_MAGENTA "\x1b[35m"
 #define ANSI_COLOR_CYAN    "\x1b[36m"
 #define ANSI_COLOR_RESET   "\x1b[0m"
+#define BUFLEN 20
 
 /*GLOBAL VARIABLES*/
 int pipe_count=0, fd;
@@ -52,6 +40,29 @@ char *input_redirection_file;
 char *output_redirection_file;
 extern char** environ;
 
+/*
+struct Node
+{
+  char *key;
+  char *value;
+  struct Node *next;
+};
+
+struct Node* head = NULL;
+*/
+
+
+
+typedef struct el {
+    char key[BUFLEN];
+    char value[BUFLEN];
+    struct el *next, *prev;
+} el;
+
+
+el *head = NULL;
+
+
 /***************************Header Files Used*****************************/
 void clear_variables();
 void fileprocess ();
@@ -74,8 +85,73 @@ void with_pipe_execute();
 static int command(int, int, int, char *cmd_exec);
 void prompt();
 void sigintHandler(int sig_num);
+//void push(struct Node** head_ref, char *key,char *value);
+//char* search(struct Node* head,char *key);
+
+void add_user(char *key, char *value);
+struct node *find_user(char *key);
+
+
+
 
 /*************************************************************************/
+int namecmp(el *a, el *b) {
+    return strcmp(a->key,b->key);
+}
+
+
+
+
+
+
+/*
+void push(struct Node** head_ref, char *key,char *value)
+{
+  struct Node* new_node = (struct Node*) malloc(sizeof(struct Node));
+  struct Node *last = *head_ref;
+
+  new_node->key = key;
+  new_node->value = value;
+
+  new_node->next = NULL;
+  if (*head_ref == NULL)
+  {
+    *head_ref = new_node;
+    return;
+  }
+
+  while(last->next != NULL)
+    last = last->next;
+
+  last->next    = new_node;
+  return;
+}
+
+char* search(struct Node* head, char *key)
+{
+  
+
+  struct Node* cur = head;
+  char *rep = "null";
+  printf("given key:%s\n",key);
+   while (cur != NULL)
+    {
+        
+        printf("diff:%d\n",strcmp(cur->key,key));
+        if (strcmp(cur->key,key)==0)
+        {
+            printf("FTS");
+            return cur->value;
+        }
+        cur = cur->next;
+    }
+    return rep ;
+}
+
+
+
+*/
+
 void sigintHandler(int sig_num)
 {
     signal(SIGINT, sigintHandler);
@@ -101,9 +177,11 @@ void clear_variables()
   
 void fileprocess ()
 {
+  //printf("in file process");
   int fd;
   history_file=(char *)malloc(100*sizeof(char));
   strcpy(history_file,current_directory);
+
   strcat(history_file, "/");
   strcat(history_file, "history.txt"); 
   fd=open(history_file, O_RDONLY|O_CREAT,S_IRUSR|S_IWUSR);
@@ -112,6 +190,7 @@ void fileprocess ()
     do 
     {
         bytes_read = read (fd, buffer, sizeof (buffer));
+
         for (i=0; i<bytes_read; ++i) 
                   {
                     temp_data[index]=buffer[i];
@@ -132,7 +211,7 @@ void fileprocess ()
 }
 void filewrite()
 {
-  
+  //printf("in file write");
   int fd_out,ret_write,str_len=0;
   char input_data[2000];
   no_of_lines++;
@@ -438,6 +517,7 @@ static int split(char *cmd_exec, int input, int first, int last)
 {
     char *new_cmd_exec1;  
     new_cmd_exec1=strdup(cmd_exec);
+
    //else
       {
         int m=1;
@@ -486,7 +566,7 @@ input=0;
 first= 1;
 
 cmd_exec[0]=strtok(input_buffer,"|");
-
+//printf("%s",cmd_exec[0]);
 while ((cmd_exec[n]=strtok(NULL,"|"))!=NULL)
       n++;
 cmd_exec[n]=NULL;
@@ -503,6 +583,7 @@ return;
 }
 static int command(int input, int first, int last, char *cmd_exec)
 {
+  printf("%s",cmd_exec);
   int mypipefd[2], ret, input_fd, output_fd;
   ret = pipe(mypipefd);
   if(ret == -1)
@@ -608,7 +689,6 @@ void prompt()
 	  printf(ANSI_COLOR_CYAN);
           printf( "%s" , shell);
 	  printf(ANSI_COLOR_RESET);
-	  
         }
    else
        perror("getcwd() error");
@@ -616,28 +696,109 @@ void prompt()
 }
 
 int main()
-{   input_buffer = (char*)malloc(1024*sizeof(char));
+{   
+    input_buffer = (char*)malloc(1024*sizeof(char));
+    struct node *s;
     int status;
     char ch[2]={"\n"};
+    char *ch1;
+    char *str;
+    char *str1;
+    char *inp[3];
+    char *ans;
+    int len;
+    el *name, *elt, *tmp, etmp;
+
+    
+    int i;
+
     getcwd(current_directory, sizeof(current_directory));
     signal(SIGINT, sigintHandler);
+    
     while (1)
     {
       clear_variables();
       prompt();
       input_buffer = readline(NULL);
-      //fgets(input_buffer, 1024, stdin);
-      printf("Inp_buf : %s\n",input_buffer);
       add_history(input_buffer);
-      if(strcmp(input_buffer, ch)==0)
+      //fgets(input_buffer, 1024, stdin);
+      i=0;
+      //printf("input %c\n",input_buffer[0]);
+      //char *a[10];
+      //a[0]=strtok(input_buffer," ");
+      //printf("%s",input_buffer);
+      /*
+      if(strcmp(a[0],"alias"))
+      {
+          //a = strtok(NULL," ");
+          printf("here");
+          printf("\n%s",a[1]);
+      }
+      */
+      
+
+
+
+      if(strcmp(input_buffer, ch)==0 || strlen(input_buffer)==0)
             {
               continue;
             }
+
+      str = input_buffer;
+      str1 = input_buffer;
+      ch1 = strtok(str, "~");
+      while (ch1 != NULL && i<3) {
+      inp[i]=ch1;
+      //printf("%s\n", inp[i]);
+      i++;
+      ch1 = strtok(NULL, "~");
+      }
+
+      if(strcmp(inp[0],"alias")==0)
+      {
+        name = (el*)malloc(sizeof(el));
+        strncpy(name->key,inp[1],BUFLEN);
+        strncpy(name->value,inp[2],BUFLEN);
+        DL_APPEND(head, name);
+        //printf("alias");
+        //printf("here");
+        //add_user(inp[1],inp[2]);
+        //DL_FOREACH(head,elt) printf("key:%s", elt->key);
+        continue;
+        
+      }
+      
+      /*s = find_user(input_buffer);
+
+      if(s == NULL)
+      { 
+        printf("kkk");
+        //printf("%s",s->value);
+        //ans = "null";
+        continue;
+      }
+      */
+      str1=strtok(str1,"\n");
+      memcpy(&etmp.key, str1, 20);
+      DL_SEARCH(head,elt,&etmp,namecmp);
+
+      if (elt) 
+      {
+        //printf("found %s\n", elt->value);
+        //input_buffer = elt->value;
+        strcpy(input_buffer,elt->value);
+        //continue;
+      }
+      //else printf("omegalul");
+
       if(input_buffer[0]!='!')
             {
+               // printf("here");
+
                 fileprocess();
                 filewrite(); 
-            }         
+            }  
+
       len = strlen(input_buffer);
       //input_buffer[len-1]='\0';
       strcpy(his_var, input_buffer);
@@ -648,6 +809,7 @@ int main()
             }
       if(input_buffer[0]=='!')  
               {
+                //printf("here1");
                 fileprocess();
                 bang_flag=1;
                 bang_execute();

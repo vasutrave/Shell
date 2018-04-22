@@ -1,0 +1,1 @@
+echo "abc" > 1.txtabc > 1.txt

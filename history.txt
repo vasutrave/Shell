@@ -1,0 +1,1 @@
+ 1 ls 1 history 1 ls -l 1 history 1 ls 1 ls 1 ls -l 1 ls 1 ls 1 ls 1 exit 1 ls 1 ls -l  1 whoami 1 clear 1 history 1 ls
