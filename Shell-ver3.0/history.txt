@@ -1,0 +1,8 @@
+ 1 kilo new
+ 2 clear
+ 3 history
+ 4 count 10
+ 5 gcc -o inf inf.c
+ 6 alarm 5 ./inf
+ 7 list c
+ 8 exit
