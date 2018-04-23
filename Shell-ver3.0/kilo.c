@@ -145,7 +145,7 @@ void editorAtExit(void) {
     disableRawMode(STDIN_FILENO);
 }
 
-/* Raw mode: 1960 magic shit. */
+/* Raw mode */
 int enableRawMode(int fd) {
     struct termios raw;
 
